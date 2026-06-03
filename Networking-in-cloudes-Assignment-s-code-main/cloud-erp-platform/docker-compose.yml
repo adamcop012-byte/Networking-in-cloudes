@@ -1,0 +1,102 @@
+# =============================================================================
+#  Docker Compose — Cloud VPC Simulation
+#  ─────────────────────────────────────
+#  Simulates a 2-subnet AWS VPC:
+#
+#    public_subnet:   Nginx API Gateway  (internet-facing)
+#    private_subnet:  ERP + CRM + WMS   (isolated, no direct outside access)
+#
+#  Network topology:
+#    Internet → [Nginx :80] → private_subnet → [erp:8001 | crm:8002 | wms:8003]
+#
+#  Services in private_subnet are NOT exposed on the host — they are ONLY
+#  reachable through the gateway, exactly like a real VPC private subnet.
+# =============================================================================
+
+networks:
+  # Public subnet — gateway lives here, exposed to host/internet
+  public_subnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24   # mirrors AWS: 10.0.1.0/24 public
+
+  # Private subnet — services live here, no direct host exposure
+  private_subnet:
+    driver: bridge
+    internal: true               # ← key: blocks direct internet access
+    ipam:
+      config:
+        - subnet: 10.0.2.0/24   # mirrors AWS: 10.0.2.0/24 private
+
+services:
+
+  # ── ERP Service (Private Subnet) ─────────────────────────────────────────
+  erp:
+    build: ./services/erp
+    container_name: erp-service
+    networks:
+      - private_subnet
+    environment:
+      - CORS_ORIGINS=http://localhost,http://localhost:80
+    # NOT exposed on host — only reachable via gateway
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── CRM Service (Private Subnet) ─────────────────────────────────────────
+  crm:
+    build: ./services/crm
+    container_name: crm-service
+    networks:
+      - private_subnet
+    environment:
+      - CORS_ORIGINS=http://localhost,http://localhost:80
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── WMS Service (Private Subnet) ─────────────────────────────────────────
+  wms:
+    build: ./services/wms
+    container_name: wms-service
+    networks:
+      - private_subnet
+    environment:
+      - CORS_ORIGINS=http://localhost,http://localhost:80
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── Nginx API Gateway (Public Subnet — bridges both networks) ────────────
+  gateway:
+    build: ./gateway
+    container_name: api-gateway
+    ports:
+      - "80:80"                  # ← ONLY this port is exposed to the internet
+    networks:
+      - public_subnet            # internet-facing
+      - private_subnet           # can reach private services
+    depends_on:
+      erp:
+        condition: service_healthy
+      crm:
+        condition: service_healthy
+      wms:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped

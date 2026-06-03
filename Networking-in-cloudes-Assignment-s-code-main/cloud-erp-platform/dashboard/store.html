@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WholesaleHub — Product Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+[data-theme="dark"]{
+  --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;
+  --text:#f0f0f8;--muted:#6b6b8a;--subtle:#3a3a50;
+  --accent:#6366f1;--accent2:#a78bfa;--success:#22d3a0;
+  --danger:#f43f5e;--warn:#f59e0b;
+  --card-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#f8f8fc;--surface:#ffffff;--surface2:#f0f0f8;--border:#e0e0ee;
+  --text:#1a1a2e;--muted:#7070a0;--subtle:#dcdcf0;
+  --accent:#6366f1;--accent2:#7c3aed;--success:#059669;
+  --danger:#dc2626;--warn:#d97706;
+  --card-shadow:0 4px 24px rgba(99,102,241,.08);
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-1px;color:var(--accent)}
+.nav-logo span{color:var(--text)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-link{font-size:.82rem;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all .2s}
+.nav-link:hover,.nav-link.active{background:var(--surface2);color:var(--text)}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent)}
+.cart-btn{display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:22px;padding:8px 18px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .2s}
+.cart-btn:hover{opacity:.88}
+.cart-count{background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:.72rem}
+
+/* Hero */
+.hero{padding:60px 32px 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(99,102,241,.15),transparent);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:var(--accent);border-radius:20px;padding:4px 14px;font-size:.72rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:800;line-height:1.1;letter-spacing:-2px;margin-bottom:14px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:.95rem;color:var(--muted);max-width:480px;margin:0 auto 28px;line-height:1.6}
+
+/* Search & Filter */
+.controls{padding:0 32px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;max-width:1200px;margin:0 auto}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px 10px 40px;font-size:.85rem;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap}
+.filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 14px;font-size:.78rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sort-select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.78rem;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
+
+/* Products grid */
+.products-wrap{padding:0 32px 48px;max-width:1200px;margin:0 auto}
+.results-info{font-size:.78rem;color:var(--muted);margin-bottom:16px}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+
+/* Product card */
+.product-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:var(--card-shadow)}
+.product-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(99,102,241,.15)}
+.product-img-wrap{position:relative;overflow:hidden;aspect-ratio:1}
+.product-img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.product-card:hover .product-img{transform:scale(1.06)}
+.product-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5),transparent);opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;padding:12px}
+.product-card:hover .product-overlay{opacity:1}
+.quick-view{background:rgba(255,255,255,.95);color:#111;border:none;border-radius:8px;padding:7px 14px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;transition:background .2s}
+.quick-view:hover{background:#fff}
+.product-body{padding:14px}
+.product-cat{font-size:.62rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.product-name{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:6px;line-height:1.3}
+.product-supplier{font-size:.68rem;color:var(--muted);margin-bottom:10px}
+.product-footer{display:flex;justify-content:space-between;align-items:center}
+.product-price{font-size:1.05rem;font-weight:700;color:var(--accent)}
+.stock-pill{font-size:.6rem;font-weight:700;text-transform:uppercase;padding:3px 9px;border-radius:10px}
+.stock-pill.in{background:rgba(34,211,160,.12);color:var(--success)}
+.stock-pill.low{background:rgba(245,158,11,.12);color:var(--warn)}
+.stock-pill.out{background:rgba(244,63,94,.12);color:var(--danger)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+.modal-overlay.open{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:760px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-body{display:flex;gap:0;flex:1;overflow:hidden}
+.modal-img-side{width:320px;flex-shrink:0;overflow:hidden}
+.modal-img-side img{width:100%;height:100%;object-fit:cover}
+.modal-info-side{flex:1;padding:28px;overflow-y:auto}
+.modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;cursor:pointer;font-size:1.1rem;color:var(--muted);display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s}
+.modal-close:hover{color:var(--text);border-color:var(--accent)}
+.modal-category{font-size:.68rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-1px;margin-bottom:6px;line-height:1.2}
+.modal-sku{font-size:.72rem;color:var(--muted);font-family:monospace;margin-bottom:14px}
+.modal-price{font-size:1.8rem;font-weight:800;color:var(--accent);margin-bottom:20px}
+.modal-detail-row{display:flex;gap:8px;margin-bottom:8px;font-size:.82rem}
+.modal-detail-label{color:var(--muted);min-width:90px;font-weight:500}
+.modal-detail-value{color:var(--text);font-weight:400}
+.qty-wrap{display:flex;align-items:center;gap:12px;margin:20px 0}
+.qty-btn{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent)}
+.qty-num{font-size:1rem;font-weight:700;min-width:32px;text-align:center}
+.add-cart-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;letter-spacing:.3px;transition:opacity .2s;margin-top:8px}
+.add-cart-btn:hover{opacity:.88}
+.add-cart-btn.added{background:var(--success)}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--success);color:var(--success);border-radius:12px;padding:12px 20px;font-size:.82rem;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* Empty state */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Wholesale<span>Hub</span></div>
+  <div class="nav-links">
+    <a href="store.html" class="nav-link active">Store</a>
+    <a href="checkout.html" class="nav-link">Checkout</a>
+    <a href="index.html" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌙</button>
+    <button class="cart-btn" onclick="window.location='checkout.html'">
+      🛒 Cart <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">✦ Wholesale Clothing Co.</div>
+  <h1>Premium <em>Wholesale</em><br>Clothing Catalogue</h1>
+  <p>Browse our full collection of wholesale garments. Bulk pricing available for all tiers.</p>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="Search products…" oninput="filterProducts()">
+  </div>
+  <div class="filter-btns" id="filter-btns">
+    <button class="filter-btn active" data-cat="All" onclick="setCategory(this,'All')">All</button>
+  </div>
+  <select class="sort-select" id="sort-select" onchange="filterProducts()">
+    <option value="default">Sort: Default</option>
+    <option value="price-asc">Price: Low → High</option>
+    <option value="price-desc">Price: High → Low</option>
+    <option value="stock-desc">Stock: High → Low</option>
+    <option value="name-asc">Name: A → Z</option>
+  </select>
+</div>
+
+<div class="products-wrap">
+  <div class="results-info" id="results-info">Loading products…</div>
+  <div class="products-grid" id="products-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Loading…</div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-body">
+      <div class="modal-img-side">
+        <img id="modal-img" src="" alt="">
+      </div>
+      <div class="modal-info-side">
+        <div class="modal-category" id="modal-cat"></div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-sku" id="modal-sku"></div>
+        <div class="modal-price" id="modal-price"></div>
+        <div id="modal-details"></div>
+        <div class="qty-wrap">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <div class="qty-num" id="modal-qty">1</div>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+          <span style="font-size:.75rem;color:var(--muted)">units</span>
+        </div>
+        <button class="add-cart-btn" id="add-cart-btn" onclick="addToCart()">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let allProducts = [];
+let cart = JSON.parse(localStorage.getItem('wh_cart') || '[]');
+let currentProduct = null;
+let currentQty = 1;
+let activeCategory = 'All';
+
+// ── Theme ──────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('wh_theme', html.dataset.theme);
+}
+(function initTheme() {
+  const saved = localStorage.getItem('wh_theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// ── Cart ───────────────────────────────────────────────────────────────────────
+function saveCart() { localStorage.setItem('wh_cart', JSON.stringify(cart)); }
+function updateCartCount() { document.getElementById('cart-count').textContent = cart.reduce((s,i)=>s+i.qty,0); }
+updateCartCount();
+
+// ── Fetch products ─────────────────────────────────────────────────────────────
+async function fetchProducts() {
+  try {
+    const r = await fetch('/erp/api/catalogue');
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    return data.catalogue;
+  } catch {
+    // fallback demo data if API unreachable
+    return [
+      {id:'P001',name:"Men's Denim Jacket",sku:'MDJ-001',category:'Outerwear',price:45.99,stock:240,image_url:'https://picsum.photos/seed/MDJ001/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P002',name:"Women's Silk Blouse",sku:'WSB-002',category:'Tops',price:22.50,stock:380,image_url:'https://picsum.photos/seed/WSB002/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P003',name:'Cargo Trousers',sku:'CGT-003',category:'Bottoms',price:34.00,stock:155,image_url:'https://picsum.photos/seed/CGT003/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P004',name:'Polo Shirt (6-pack)',sku:'PSP-004',category:'Tops',price:68.00,stock:90,image_url:'https://picsum.photos/seed/PSP004/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P005',name:'Winter Coat',sku:'WCT-005',category:'Outerwear',price:89.99,stock:60,image_url:'https://picsum.photos/seed/WCT005/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P006',name:'Classic Hoodie',sku:'CHD-006',category:'Tops',price:28.00,stock:310,image_url:'https://picsum.photos/seed/CHD006/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P007',name:'Slim-Fit Chinos',sku:'SFC-007',category:'Bottoms',price:31.50,stock:200,image_url:'https://picsum.photos/seed/SFC007/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P008',name:'Formal Dress Shirt',sku:'FDS-008',category:'Tops',price:19.99,stock:420,image_url:'https://picsum.photos/seed/FDS008/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P009',name:'Summer Linen Set',sku:'SLS-009',category:'Sets',price:54.00,stock:75,image_url:'https://picsum.photos/seed/SLS009/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+      {id:'P010',name:'Waterproof Windbreaker',sku:'WWB-010',category:'Outerwear',price:72.00,stock:130,image_url:'https://picsum.photos/seed/WWB010/400/400',in_stock:true,low_stock:false,out_of_stock:false},
+    ];
+  }
+}
+
+// ── Filters ────────────────────────────────────────────────────────────────────
+function setCategory(btn, cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+  let filtered = allProducts.filter(p => {
+    const matchCat = activeCategory === 'All' || p.category === activeCategory;
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  if (sort === 'price-asc')   filtered.sort((a,b) => a.price - b.price);
+  if (sort === 'price-desc')  filtered.sort((a,b) => b.price - a.price);
+  if (sort === 'stock-desc')  filtered.sort((a,b) => b.stock - a.stock);
+  if (sort === 'name-asc')    filtered.sort((a,b) => a.name.localeCompare(b.name));
+  renderProducts(filtered);
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderProducts(products) {
+  const grid = document.getElementById('products-grid');
+  document.getElementById('results-info').textContent =
+    `Showing ${products.length} of ${allProducts.length} products`;
+
+  if (!products.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div>No products match your search</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => {
+    const stockClass = p.out_of_stock ? 'out' : p.low_stock ? 'low' : 'in';
+    const stockLabel = p.out_of_stock ? 'Out of Stock' : p.low_stock ? 'Low Stock' : 'In Stock';
+    return `
+      <div class="product-card" onclick="openModal('${p.id}')">
+        <div class="product-img-wrap">
+          <img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy"
+               onerror="this.src='https://picsum.photos/seed/${p.id}/400/400'">
+          <div class="product-overlay">
+            <button class="quick-view">Quick View →</button>
+          </div>
+        </div>
+        <div class="product-body">
+          <div class="product-cat">${p.category}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-supplier">${p.sku}</div>
+          <div class="product-footer">
+            <span class="product-price">$${p.price.toFixed(2)}</span>
+            <span class="stock-pill ${stockClass}">${stockLabel}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  currentProduct = p;
+  currentQty = 1;
+
+  document.getElementById('modal-img').src = p.image_url;
+  document.getElementById('modal-cat').textContent = p.category;
+  document.getElementById('modal-title').textContent = p.name;
+  document.getElementById('modal-sku').textContent = `SKU: ${p.sku}`;
+  document.getElementById('modal-price').textContent = `$${p.price.toFixed(2)} / unit`;
+  document.getElementById('modal-qty').textContent = 1;
+  document.getElementById('add-cart-btn').textContent = 'Add to Cart';
+  document.getElementById('add-cart-btn').className = 'add-cart-btn';
+
+  const stockLabel = p.out_of_stock ? '❌ Out of Stock' : p.low_stock ? '⚠️ Low Stock' : '✅ In Stock';
+  document.getElementById('modal-details').innerHTML = `
+    <div class="modal-detail-row"><span class="modal-detail-label">Stock</span><span class="modal-detail-value">${p.stock.toLocaleString()} units &nbsp;${stockLabel}</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label">Unit Price</span><span class="modal-detail-value">$${p.price.toFixed(2)}</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label">Min. Order</span><span class="modal-detail-value">10 units</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label">Lead Time</span><span class="modal-detail-value">3–5 business days</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label">Category</span><span class="modal-detail-value">${p.category}</span></div>
+  `;
+
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function changeQty(delta) {
+  currentQty = Math.max(1, currentQty + delta);
+  document.getElementById('modal-qty').textContent = currentQty;
+}
+
+function addToCart() {
+  if (!currentProduct) return;
+  const existing = cart.find(i => i.id === currentProduct.id);
+  if (existing) existing.qty += currentQty;
+  else cart.push({ id: currentProduct.id, name: currentProduct.name, price: currentProduct.price, image_url: currentProduct.image_url, qty: currentQty, sku: currentProduct.sku });
+  saveCart();
+  updateCartCount();
+
+  const btn = document.getElementById('add-cart-btn');
+  btn.textContent = '✓ Added to Cart';
+  btn.className = 'add-cart-btn added';
+  showToast(`${currentProduct.name} × ${currentQty} added to cart`);
+  setTimeout(() => { btn.textContent = 'Add to Cart'; btn.className = 'add-cart-btn'; }, 2000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+(async () => {
+  allProducts = await fetchProducts();
+  const cats = ['All', ...new Set(allProducts.map(p => p.category))];
+  const filterWrap = document.getElementById('filter-btns');
+  filterWrap.innerHTML = cats.map((c,i) =>
+    `<button class="filter-btn ${i===0?'active':''}" data-cat="${c}" onclick="setCategory(this,'${c}')">${c}</button>`
+  ).join('');
+  filterProducts();
+})();
+
+// Close modal on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+</script>
+</body>
+</html>

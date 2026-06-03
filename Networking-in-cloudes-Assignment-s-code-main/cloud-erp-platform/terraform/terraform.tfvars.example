@@ -1,0 +1,33 @@
+# ============================================================================
+# Terraform Configuration Variables — Copy to terraform.tfvars
+# ============================================================================
+# Copy this file to terraform.tfvars and customize for your environment:
+#   cp terraform.tfvars.example terraform.tfvars
+
+# AWS Configuration
+aws_region     = "eu-west-1"
+project_name   = "cloud-erp"
+environment    = "production"
+
+# EC2 Key Pair (SSH access)
+# Must already exist in your AWS account
+# Create via: aws ec2 create-key-pair --key-name <name> --region eu-west-1
+key_pair_name  = "cloud-erp-key"
+
+# AMI ID — Ubuntu 22.04 LTS (region-specific)
+# eu-west-1: ami-0694d931cee176e7d
+# us-east-1: ami-0c02fb55731490381
+# ap-southeast-1: ami-0eb9d67e46d91a0a7
+ami_id         = "ami-0694d931cee176e7d"
+
+# Your GitHub Repo (for cloning on EC2)
+repo_url       = "https://github.com/YOUR-ORG/cloud-erp-platform.git"
+
+# SSH Admin CIDR — restrict to YOUR IP for security
+# Find your IP: curl https://ifconfig.me
+# Format: "203.0.113.45/32" for single IP, or "203.0.113.0/24" for subnet
+admin_cidr     = "0.0.0.0/0"  # CHANGE THIS: restrict to your IP!
+
+# EC2 Instance Types
+instance_type_gateway = "t3.micro"    # Nginx gateway (public)
+instance_type_service = "t3.small"    # ERP/CRM/WMS (private)

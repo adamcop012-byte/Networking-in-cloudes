@@ -1,0 +1,5 @@
+# CI / local integration test dependencies (pinned for TestClient + httpx compatibility)
+pytest>=7.4,<9
+httpx>=0.26.0,<0.28.0
+fastapi>=0.100,<0.110
+uvicorn[standard]>=0.23,<0.25

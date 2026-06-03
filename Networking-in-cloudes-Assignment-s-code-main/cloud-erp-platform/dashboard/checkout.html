@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WholesaleHub — Checkout</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+[data-theme="dark"]{
+  --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;
+  --text:#f0f0f8;--muted:#6b6b8a;--subtle:#3a3a50;
+  --accent:#6366f1;--accent2:#a78bfa;--success:#22d3a0;
+  --danger:#f43f5e;--warn:#f59e0b;
+}
+[data-theme="light"]{
+  --bg:#f8f8fc;--surface:#ffffff;--surface2:#f0f0f8;--border:#e0e0ee;
+  --text:#1a1a2e;--muted:#7070a0;--subtle:#dcdcf0;
+  --accent:#6366f1;--accent2:#7c3aed;--success:#059669;
+  --danger:#dc2626;--warn:#d97706;
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-1px;color:var(--accent)}
+.nav-logo span{color:var(--text)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-link{font-size:.82rem;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all .2s}
+.nav-link:hover,.nav-link.active{background:var(--surface2);color:var(--text)}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all .2s}
+.theme-toggle:hover{border-color:var(--accent)}
+
+/* Page layout */
+.page{max-width:1100px;margin:0 auto;padding:40px 32px;display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
+@media(max-width:800px){.page{grid-template-columns:1fr;padding:24px 16px}}
+
+/* Section headers */
+.section-head{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.section-num{width:28px;height:28px;background:var(--accent);color:#fff;border-radius:50%;font-size:.78rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* Form */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:.85rem;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;resize:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--muted)}
+.form-group select option{background:var(--surface)}
+
+/* Payment methods */
+.payment-methods{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.payment-opt{border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px}
+.payment-opt:hover{border-color:var(--accent)}
+.payment-opt.selected{border-color:var(--accent);background:rgba(99,102,241,.08)}
+.payment-opt input{display:none}
+.payment-icon{font-size:1.4rem}
+.payment-label{font-size:.72rem;font-weight:600;color:var(--muted)}
+.payment-opt.selected .payment-label{color:var(--accent)}
+
+/* Delivery date */
+.date-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.date-opt{border:1px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all .2s;text-align:center}
+.date-opt:hover{border-color:var(--accent)}
+.date-opt.selected{border-color:var(--accent);background:rgba(99,102,241,.08)}
+.date-day{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--accent)}
+.date-label{font-size:.65rem;color:var(--muted);margin-top:2px}
+.date-speed{font-size:.65rem;margin-top:3px}
+
+/* Order summary */
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;position:sticky;top:84px}
+.cart-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.cart-item:last-of-type{border-bottom:none}
+.cart-item-img{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--surface2);flex-shrink:0}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cart-item-sku{font-size:.65rem;color:var(--muted);font-family:monospace}
+.cart-item-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.cart-item-qty{font-size:.7rem;color:var(--muted)}
+.cart-item-price{font-size:.82rem;font-weight:700;color:var(--accent)}
+.cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 6px;border-radius:4px;transition:color .2s}
+.cart-item-remove:hover{color:var(--danger)}
+.empty-cart{text-align:center;padding:30px;color:var(--muted)}
+.empty-cart-icon{font-size:2.5rem;margin-bottom:10px}
+
+/* Totals */
+.totals{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+.total-row{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:8px;color:var(--muted)}
+.total-row span:last-child{color:var(--text)}
+.total-final{display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.total-final span:last-child{color:var(--accent)}
+
+/* Place order button */
+.place-order-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;letter-spacing:.3px;margin-top:18px;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.place-order-btn:hover{opacity:.88}
+.place-order-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Success overlay */
+.success-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;animation:fadeIn .4s}
+.success-overlay.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.success-icon{font-size:4rem;margin-bottom:20px;animation:pop .5s .2s both}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:10px}
+.success-sub{color:var(--muted);font-size:.9rem;margin-bottom:28px;max-width:400px;line-height:1.6}
+.success-ref{font-family:monospace;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.9rem;margin-bottom:28px;color:var(--accent)}
+.back-btn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:opacity .2s}
+.back-btn:hover{opacity:.88}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Wholesale<span>Hub</span></div>
+  <div class="nav-links">
+    <a href="store.html" class="nav-link">Store</a>
+    <a href="checkout.html" class="nav-link active">Checkout</a>
+    <a href="index.html" class="nav-link">Dashboard</a>
+  </div>
+  <div class="nav-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- LEFT: Forms -->
+  <div>
+
+    <!-- Delivery Info -->
+    <div class="form-card">
+      <div class="section-head"><div class="section-num">1</div>Delivery Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="fname" placeholder="Firdavs">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="lname" placeholder="Kosimov">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Company / Organisation</label>
+          <input type="text" id="company" placeholder="Tashkent Retail Co.">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Delivery Address</label>
+          <input type="text" id="address" placeholder="123 Amir Temur Avenue">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="city" placeholder="Tashkent">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <select id="country">
+            <option value="UZ">🇺🇿 Uzbekistan</option>
+            <option value="KZ">🇰🇿 Kazakhstan</option>
+            <option value="KG">🇰🇬 Kyrgyzstan</option>
+            <option value="TJ">🇹🇯 Tajikistan</option>
+            <option value="TR">🇹🇷 Turkey</option>
+            <option value="RU">🇷🇺 Russia</option>
+            <option value="CN">🇨🇳 China</option>
+            <option value="AE">🇦🇪 UAE</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="phone" placeholder="+998 90 123 45 67">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="orders@company.com">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Special Instructions (optional)</label>
+          <textarea id="notes" rows="2" placeholder="Loading dock access, fragile items, etc."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Date -->
+    <div class="form-card">
+      <div class="section-head"><div class="section-num">2</div>Delivery Date</div>
+      <div class="date-options" id="date-options"></div>
+    </div>
+
+    <!-- Payment -->
+    <div class="form-card">
+      <div class="section-head"><div class="section-num">3</div>Payment Method</div>
+      <div class="payment-methods">
+        <label class="payment-opt selected" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="click" checked>
+          <div class="payment-icon">⚡</div>
+          <div class="payment-label">Click</div>
+        </label>
+        <label class="payment-opt" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="payme">
+          <div class="payment-icon">💳</div>
+          <div class="payment-label">Payme</div>
+        </label>
+        <label class="payment-opt" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="uzcard">
+          <div class="payment-icon">🏦</div>
+          <div class="payment-label">Uzcard</div>
+        </label>
+        <label class="payment-opt" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="humo">
+          <div class="payment-icon">🟠</div>
+          <div class="payment-label">Humo</div>
+        </label>
+        <label class="payment-opt" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="bank">
+          <div class="payment-icon">🏛️</div>
+          <div class="payment-label">Bank Transfer</div>
+        </label>
+        <label class="payment-opt" onclick="selectPayment(this)">
+          <input type="radio" name="payment" value="cash">
+          <div class="payment-icon">💵</div>
+          <div class="payment-label">Cash on Delivery</div>
+        </label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Order Summary -->
+  <div class="summary-card">
+    <div class="section-head" style="margin-bottom:16px">🛒 Order Summary</div>
+    <div id="cart-items-list"></div>
+    <div class="totals" id="totals-section"></div>
+    <button class="place-order-btn" id="place-btn" onclick="placeOrder()">
+      Place Order →
+    </button>
+    <div style="text-align:center;font-size:.65rem;color:var(--muted);margin-top:12px">
+      🔒 Secured by WholesaleHub Cloud Platform
+    </div>
+  </div>
+
+</div>
+
+<!-- Success -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-icon">✅</div>
+  <div class="success-title">Order Confirmed!</div>
+  <div class="success-sub">Your wholesale order has been placed successfully. Our logistics team will contact you within 24 hours to confirm dispatch.</div>
+  <div class="success-ref" id="success-ref">REF: —</div>
+  <div style="display:flex;gap:12px">
+    <button class="back-btn" onclick="continueShopping()">Continue Shopping</button>
+  </div>
+</div>
+
+<script>
+// ── Theme ──────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('wh_theme', html.dataset.theme);
+}
+(function initTheme() {
+  const saved = localStorage.getItem('wh_theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// ── Cart ───────────────────────────────────────────────────────────────────────
+let cart = JSON.parse(localStorage.getItem('wh_cart') || '[]');
+
+function saveCart() { localStorage.setItem('wh_cart', JSON.stringify(cart)); }
+
+function removeItem(id) {
+  cart = cart.filter(i => i.id !== id);
+  saveCart();
+  renderCart();
+}
+
+function renderCart() {
+  const list = document.getElementById('cart-items-list');
+  const totals = document.getElementById('totals-section');
+  const btn = document.getElementById('place-btn');
+
+  if (!cart.length) {
+    list.innerHTML = `<div class="empty-cart"><div class="empty-cart-icon">🛒</div><div>Your cart is empty</div><a href="store.html" style="color:var(--accent);font-size:.82rem;text-decoration:none;margin-top:8px;display:block">← Back to Store</a></div>`;
+    totals.innerHTML = '';
+    btn.disabled = true;
+    return;
+  }
+
+  btn.disabled = false;
+  list.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <img class="cart-item-img" src="${item.image_url}" alt="${item.name}"
+           onerror="this.src='https://picsum.photos/seed/${item.id}/100/100'">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-sku">${item.sku}</div>
+        <div class="cart-item-bottom">
+          <span class="cart-item-qty">× ${item.qty} units</span>
+          <span class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</span>
+          <button class="cart-item-remove" onclick="removeItem('${item.id}')" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const shipping = subtotal > 1000 ? 0 : 45;
+  const tax = subtotal * 0.12;
+  const total = subtotal + shipping + tax;
+
+  totals.innerHTML = `
+    <div class="total-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+    <div class="total-row"><span>Shipping</span><span>${shipping === 0 ? '<span style="color:var(--success)">Free</span>' : '$' + shipping.toFixed(2)}</span></div>
+    <div class="total-row"><span>VAT (12%)</span><span>$${tax.toFixed(2)}</span></div>
+    <div class="total-final"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+  `;
+}
+
+// ── Payment ────────────────────────────────────────────────────────────────────
+function selectPayment(label) {
+  document.querySelectorAll('.payment-opt').forEach(l => l.classList.remove('selected'));
+  label.classList.add('selected');
+}
+
+// ── Delivery dates ─────────────────────────────────────────────────────────────
+function renderDates() {
+  const wrap = document.getElementById('date-options');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const options = [3, 5, 7].map(offset => {
+    const d = new Date(); d.setDate(d.getDate() + offset);
+    return { day: days[d.getDay()], date: `${d.getDate()} ${months[d.getMonth()]}`, offset };
+  });
+  const speeds = ['Express', 'Standard', 'Economy'];
+  const speedColors = ['var(--success)', 'var(--accent)', 'var(--muted)'];
+
+  wrap.innerHTML = options.map((o, i) => `
+    <div class="date-opt ${i===1?'selected':''}" onclick="selectDate(this)">
+      <div class="date-day">${o.day}</div>
+      <div class="date-label">${o.date}</div>
+      <div class="date-speed" style="color:${speedColors[i]}">${speeds[i]}</div>
+    </div>
+  `).join('');
+}
+function selectDate(el) {
+  document.querySelectorAll('.date-opt').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── Place Order ────────────────────────────────────────────────────────────────
+function placeOrder() {
+  const fname = document.getElementById('fname').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const city = document.getElementById('city').value.trim();
+
+  if (!fname || !address || !city) {
+    alert('Please fill in your name, address and city to continue.');
+    return;
+  }
+
+  const ref = 'ORD-' + Date.now().toString().slice(-6);
+  document.getElementById('success-ref').textContent = 'REF: ' + ref;
+  document.getElementById('success-overlay').classList.add('show');
+
+  // Clear cart
+  cart = [];
+  saveCart();
+}
+
+function continueShopping() {
+  document.getElementById('success-overlay').classList.remove('show');
+  window.location.href = 'store.html';
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+renderCart();
+renderDates();
+</script>
+</body>
+</html>

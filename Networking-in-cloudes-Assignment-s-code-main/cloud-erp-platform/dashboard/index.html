@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cloud ERP Platform — Operations Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--radius:8px;
+    --erp:#3b82f6;--crm:#a855f7;--wms:#22c55e;
+    --red:#ef4444;--yellow:#f59e0b;
+  }
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+
+  /* Header */
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+  h1{font-size:1.5rem;font-weight:700;letter-spacing:-.5px}
+  h1 span{color:var(--erp)}
+  .arch-badge{font-size:.7rem;background:rgba(59,130,246,.15);color:var(--erp);border:1px solid var(--erp);border-radius:20px;padding:3px 10px;margin-left:10px;vertical-align:middle}
+
+  /* VPC diagram */
+  .vpc-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
+  .vpc-label{font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .vpc-diagram{display:flex;gap:16px;align-items:stretch}
+  .subnet{flex:1;border-radius:8px;padding:14px;border:2px dashed}
+  .subnet.public{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.05);max-width:200px}
+  .subnet.private{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.04)}
+  .subnet-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+  .subnet.public .subnet-title{color:var(--erp)}
+  .subnet.private .subnet-title{color:var(--wms)}
+  .svc-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:.8rem}
+  .svc-name{font-weight:600}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .status-dot.up{background:var(--wms);box-shadow:0 0 6px var(--wms)}
+  .status-dot.down{background:var(--red)}
+  .arrow{display:flex;align-items:center;color:var(--muted);font-size:1.4rem;padding:0 4px}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+  .stat-value{font-size:1.9rem;font-weight:700;line-height:1}
+  .stat-label{font-size:.63rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  .stat-sub{font-size:.6rem;color:var(--muted);margin-top:2px}
+
+  /* Section title */
+  .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:24px 0 14px;display:flex;align-items:center;gap:8px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* Product catalogue */
+  .catalogue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+  .product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s,transform .2s}
+  .product-card:hover{border-color:var(--erp);transform:translateY(-2px)}
+  .product-img{width:100%;height:140px;object-fit:cover;background:var(--surface2)}
+  .product-img.loading{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .product-info{padding:10px 12px}
+  .product-name{font-size:.78rem;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .product-sku{font-size:.62rem;color:var(--muted);font-family:monospace}
+  .product-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .product-price{font-size:.85rem;font-weight:700;color:var(--wms)}
+  .stock-badge{font-size:.58rem;padding:2px 7px;border-radius:10px;font-weight:700;text-transform:uppercase}
+  .stock-badge.in-stock{background:rgba(34,197,94,.15);color:var(--wms)}
+  .stock-badge.low-stock{background:rgba(245,158,11,.15);color:var(--yellow)}
+  .stock-badge.out-stock{background:rgba(239,68,68,.15);color:var(--red)}
+  .product-stock-num{font-size:.62rem;color:var(--muted);margin-top:2px}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:24px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+  .card-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+  /* Warehouse bars */
+  .wh-bar-row{margin-bottom:14px}
+  .wh-bar-label{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px}
+  .wh-bar-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+  .wh-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:.78rem}
+  th{text-align:left;color:var(--muted);font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;padding:0 0 8px;border-bottom:1px solid var(--border)}
+  td{padding:8px 0;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+
+  /* Badges */
+  .badge{padding:2px 8px;border-radius:12px;font-size:.63rem;font-weight:700;text-transform:uppercase}
+  .badge.shipped   {background:rgba(59,130,246,.2);color:var(--erp)}
+  .badge.processing{background:rgba(245,158,11,.2);color:var(--yellow)}
+  .badge.delivered {background:rgba(34,197,94,.2);color:var(--wms)}
+  .badge.pending   {background:rgba(139,148,158,.15);color:var(--muted)}
+  .badge.gold      {background:rgba(245,158,11,.2);color:var(--yellow)}
+  .badge.silver    {background:rgba(139,148,158,.2);color:#aaa}
+  .badge.bronze    {background:rgba(180,100,50,.2);color:#cd7f32}
+  .badge.high      {background:rgba(239,68,68,.2);color:var(--red)}
+  .badge.normal    {background:rgba(59,130,246,.15);color:var(--erp)}
+  .badge.urgent    {background:rgba(239,68,68,.3);color:var(--red);border:1px solid var(--red)}
+
+  /* Activity feed */
+  .feed{max-height:240px;overflow-y:auto}
+  .feed::-webkit-scrollbar{width:3px}
+  .feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .feed-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(48,54,61,.4);font-size:.75rem;animation:fadeIn .3s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+  .feed-item:last-child{border-bottom:none}
+  .feed-icon{font-size:1rem;flex-shrink:0}
+  .feed-time{color:var(--muted);font-size:.65rem;white-space:nowrap}
+
+  /* Auto-refresh indicator */
+  .refresh-wrap{display:flex;align-items:center;gap:10px}
+  .refresh-btn{background:rgba(59,130,246,.15);color:var(--erp);border:1px solid var(--erp);border-radius:6px;padding:6px 14px;font-size:.75rem;cursor:pointer;transition:background .2s}
+  .refresh-btn:hover{background:rgba(59,130,246,.25)}
+  .last-updated{font-size:.65rem;color:var(--muted)}
+  .auto-refresh{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--muted)}
+  .refresh-ring{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--wms);animation:spin 2s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>☁️ Cloud <span>ERP</span> Platform <span class="arch-badge">VPC · 2 Subnets · 3 Services</span></h1>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:4px">Wholesale Clothing Co. — Cloud Operations Dashboard</div>
+  </div>
+  <div class="refresh-wrap">
+    <div class="auto-refresh"><div class="refresh-ring"></div>Auto-refresh 30s</div>
+    <button class="refresh-btn" onclick="loadAll()">⟳ Refresh Now</button>
+    <span class="last-updated" id="lastUpdated">—</span>
+  </div>
+</header>
+
+<!-- VPC Architecture Diagram -->
+<div class="vpc-wrap">
+  <div class="vpc-label">☁️ AWS VPC: 10.0.0.0/16 — Live Service Status</div>
+  <div class="vpc-diagram">
+    <div class="subnet public">
+      <div class="subnet-title">🌐 Public Subnet<br><span style="font-weight:400;font-size:.6rem">10.0.1.0/24</span></div>
+      <div class="svc-box">
+        <div>
+          <div class="svc-name">Nginx Gateway</div>
+          <div style="font-size:.65rem;color:var(--muted)">Port 80 · Internet-facing</div>
+        </div>
+        <div class="status-dot" id="dot-gateway"></div>
+      </div>
+      <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-top:4px">Rate limit: 100 req/s</div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="subnet private">
+      <div class="subnet-title">🔒 Private Subnet<br><span style="font-weight:400;font-size:.6rem">10.0.2.0/24 · No direct internet access</span></div>
+      <div class="svc-box">
+        <div>
+          <div class="svc-name" style="color:var(--erp)">ERP Service</div>
+          <div style="font-size:.65rem;color:var(--muted)">:8001 · Orders &amp; Inventory</div>
+        </div>
+        <div class="status-dot" id="dot-erp"></div>
+      </div>
+      <div class="svc-box">
+        <div>
+          <div class="svc-name" style="color:var(--crm)">CRM Service</div>
+          <div style="font-size:.65rem;color:var(--muted)">:8002 · Customers &amp; Pipeline</div>
+        </div>
+        <div class="status-dot" id="dot-crm"></div>
+      </div>
+      <div class="svc-box">
+        <div>
+          <div class="svc-name" style="color:var(--wms)">WMS Service</div>
+          <div style="font-size:.65rem;color:var(--muted)">:8003 · Warehouse &amp; Dispatch</div>
+        </div>
+        <div class="status-dot" id="dot-wms"></div>
+      </div>
+      <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-top:4px">Security Group: Ports 8001–8003 from gateway only</div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-value" id="stat-orders" style="color:var(--erp)">—</div>
+    <div class="stat-label">Total Orders</div>
+    <div class="stat-sub" id="stat-avg-order">avg —</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-revenue" style="color:var(--wms)">—</div>
+    <div class="stat-label">Revenue ($)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-products" style="color:var(--erp)">—</div>
+    <div class="stat-label">Products</div>
+    <div class="stat-sub" id="stat-low-stock" style="color:var(--yellow)">— low stock</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-customers" style="color:var(--crm)">—</div>
+    <div class="stat-label">Customers</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-pipeline" style="color:var(--crm)">—</div>
+    <div class="stat-label">Pipeline ($)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-warehouses" style="color:var(--wms)">—</div>
+    <div class="stat-label">Warehouses</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-dispatch" style="color:var(--yellow)">—</div>
+    <div class="stat-label">Dispatch Queue</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="stat-utilisation" style="color:var(--wms)">—</div>
+    <div class="stat-label">Avg Utilisation</div>
+  </div>
+</div>
+
+<!-- Product Catalogue -->
+<div class="section-title">🛍️ Product Catalogue — ERP Inventory</div>
+<div class="catalogue-grid" id="catalogue-grid">
+  <div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:30px;font-size:.8rem">Loading catalogue…</div>
+</div>
+
+<!-- Warehouse Utilisation Bars -->
+<div class="section-title">🏭 Warehouse Utilisation — WMS</div>
+<div class="card" style="margin-bottom:24px">
+  <div id="wh-bars">
+    <div style="color:var(--muted);text-align:center;padding:20px;font-size:.78rem">Loading…</div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="grid">
+
+  <!-- Orders -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--erp)"></div>ERP — Recent Orders</div>
+    <table>
+      <tr><th>Order ID</th><th>Customer</th><th>Qty</th><th>Status</th><th>Total</th></tr>
+      <tbody id="orders-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Customers -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--crm)"></div>CRM — Customers</div>
+    <table>
+      <tr><th>Name</th><th>Country</th><th>Tier</th><th>Orders</th><th>LTV ($)</th></tr>
+      <tbody id="customers-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Dispatch -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--yellow)"></div>WMS — Dispatch Queue</div>
+    <table>
+      <tr><th>Order</th><th>Warehouse</th><th>Items</th><th>Priority</th><th>Status</th></tr>
+      <tbody id="dispatch-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--crm)"></div>CRM — Sales Pipeline</div>
+    <table>
+      <tr><th>Deal</th><th>Customer</th><th>Value</th><th>Stage</th><th>Prob.</th></tr>
+      <tbody id="pipeline-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Stock Movements -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--wms)"></div>WMS — Stock Movements</div>
+    <table>
+      <tr><th>ID</th><th>Type</th><th>Product</th><th>Qty</th><th>Warehouse</th></tr>
+      <tbody id="movements-body"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Live Activity Feed -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--muted)"></div>Live Activity Feed</div>
+    <div class="feed" id="activity-feed">
+      <div style="color:var(--muted);font-size:.78rem;text-align:center;padding:20px">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE = '';
+
+const ICONS = {
+  call: '📞', email: '📧', meeting: '🤝',
+  inbound: '📦', outbound: '🚚', transfer: '🔄',
+};
+
+const MOVE_COLORS = { inbound: 'var(--wms)', outbound: 'var(--red)', transfer: 'var(--yellow)' };
+
+async function fetchJSON(url) {
+  try {
+    const r = await fetch(url);
+    return r.ok ? r.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function checkHealth(service, dotId) {
+  try {
+    const r = await fetch(`/${service}/health`);
+    document.getElementById(dotId).className = 'status-dot ' + (r.ok ? 'up' : 'down');
+  } catch {
+    const el = document.getElementById(dotId);
+    if (el) el.className = 'status-dot down';
+  }
+}
+
+async function loadCatalogue() {
+  const data = await fetchJSON('/erp/api/catalogue');
+  const grid = document.getElementById('catalogue-grid');
+  if (!data) { grid.innerHTML = '<div style="color:var(--red);text-align:center;padding:20px">Failed to load catalogue</div>'; return; }
+
+  grid.innerHTML = data.catalogue.map(p => {
+    const stockClass = p.out_of_stock ? 'out-stock' : p.low_stock ? 'low-stock' : 'in-stock';
+    const stockLabel = p.out_of_stock ? 'Out of Stock' : p.low_stock ? 'Low Stock' : 'In Stock';
+    return `
+      <div class="product-card">
+        <img class="product-img" src="${p.image_url}" alt="${p.name}"
+             onerror="this.style.background='#1c2128';this.alt='No image'">
+        <div class="product-info">
+          <div class="product-name" title="${p.name}">${p.name}</div>
+          <div class="product-sku">${p.sku} · ${p.category}</div>
+          <div class="product-footer">
+            <span class="product-price">$${p.price.toFixed(2)}</span>
+            <span class="stock-badge ${stockClass}">${stockLabel}</span>
+          </div>
+          <div class="product-stock-num">${p.stock.toLocaleString()} units</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadERP() {
+  const [orders, stats] = await Promise.all([
+    fetchJSON('/erp/api/orders'),
+    fetchJSON('/erp/api/stats'),
+  ]);
+
+  if (stats) {
+    document.getElementById('stat-orders').textContent = stats.orders_count;
+    document.getElementById('stat-revenue').textContent = '$' + stats.revenue_total.toLocaleString();
+    document.getElementById('stat-products').textContent = stats.products_total;
+    document.getElementById('stat-avg-order').textContent = 'avg $' + stats.avg_order_value.toLocaleString();
+    document.getElementById('stat-low-stock').textContent = stats.low_stock_count + ' low stock';
+  }
+
+  if (orders) {
+    document.getElementById('orders-body').innerHTML = orders.orders.map(o => `
+      <tr>
+        <td style="font-family:monospace;font-size:.72rem">${o.id}</td>
+        <td>${o.customer}</td>
+        <td>${o.qty}</td>
+        <td><span class="badge ${o.status}">${o.status}</span></td>
+        <td>$${o.total.toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function loadCRM() {
+  const [customers, pipeline, stats] = await Promise.all([
+    fetchJSON('/crm/api/customers'),
+    fetchJSON('/crm/api/pipeline'),
+    fetchJSON('/crm/api/stats'),
+  ]);
+
+  if (stats) {
+    document.getElementById('stat-customers').textContent = stats.total_customers;
+    document.getElementById('stat-pipeline').textContent = '$' + stats.pipeline_value.toLocaleString();
+  }
+
+  if (customers) {
+    document.getElementById('customers-body').innerHTML = customers.customers.map(c => `
+      <tr>
+        <td style="font-size:.75rem">${c.name}</td>
+        <td>${c.country}</td>
+        <td><span class="badge ${c.tier}">${c.tier}</span></td>
+        <td>${c.orders}</td>
+        <td>$${c.lifetime_value.toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  if (pipeline) {
+    document.getElementById('pipeline-body').innerHTML = pipeline.deals.map(d => `
+      <tr>
+        <td style="font-family:monospace;font-size:.7rem">${d.id}</td>
+        <td>${d.customer}</td>
+        <td>$${d.value.toLocaleString()}</td>
+        <td style="font-size:.72rem">${d.stage.replace('_', ' ')}</td>
+        <td>${d.probability}%</td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function loadWMS() {
+  const [warehouses, dispatch, movements, stats] = await Promise.all([
+    fetchJSON('/wms/api/warehouses'),
+    fetchJSON('/wms/api/dispatch'),
+    fetchJSON('/wms/api/stock-movements'),
+    fetchJSON('/wms/api/stats'),
+  ]);
+
+  if (stats) {
+    document.getElementById('stat-warehouses').textContent = stats.warehouses;
+    document.getElementById('stat-dispatch').textContent = stats.dispatch_queue_length;
+    document.getElementById('stat-utilisation').textContent = stats.overall_utilisation_pct + '%';
+  }
+
+  if (warehouses) {
+    document.getElementById('wh-bars').innerHTML = warehouses.warehouses.map(w => {
+      const pct = Math.round(w.used / w.capacity * 100);
+      const color = pct > 80 ? 'var(--red)' : pct > 60 ? 'var(--yellow)' : 'var(--wms)';
+      return `
+        <div class="wh-bar-row">
+          <div class="wh-bar-label">
+            <span style="font-weight:600">${w.name}</span>
+            <span style="color:${color}">${w.used.toLocaleString()} / ${w.capacity.toLocaleString()} units (${pct}%)</span>
+          </div>
+          <div class="wh-bar-track">
+            <div class="wh-bar-fill" style="width:${pct}%;background:${color}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (dispatch) {
+    document.getElementById('dispatch-body').innerHTML = dispatch.queue.map(d => `
+      <tr>
+        <td style="font-family:monospace;font-size:.7rem">${d.order_id}</td>
+        <td style="font-size:.72rem">${d.warehouse}</td>
+        <td>${d.items}</td>
+        <td><span class="badge ${d.priority}">${d.priority}</span></td>
+        <td style="font-size:.72rem">${d.status}</td>
+      </tr>
+    `).join('');
+  }
+
+  if (movements) {
+    document.getElementById('movements-body').innerHTML = movements.movements.map(m => `
+      <tr>
+        <td style="font-family:monospace;font-size:.7rem">${m.id}</td>
+        <td style="color:${MOVE_COLORS[m.type] || 'var(--text)'};font-weight:600;font-size:.72rem">${m.type}</td>
+        <td>${m.product}</td>
+        <td>${m.qty}</td>
+        <td style="font-size:.72rem">${m.warehouse}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function loadActivity() {
+  const [crm, wms] = await Promise.all([
+    fetchJSON('/crm/api/activity'),
+    fetchJSON('/wms/api/stock-movements'),
+  ]);
+
+  const items = [];
+  if (crm) crm.recent_activities.forEach(a => items.push({
+    icon: ICONS[a.type] || '📋',
+    text: `<strong>${a.type.toUpperCase()}</strong> · ${a.customer} — ${a.note}`,
+    time: a.date,
+  }));
+  if (wms) wms.movements.forEach(m => items.push({
+    icon: ICONS[m.type] || '📦',
+    text: `<strong>${m.type.toUpperCase()}</strong> · ${m.product} × ${m.qty} → ${m.warehouse}`,
+    time: m.date,
+  }));
+
+  items.sort((a, b) => b.time.localeCompare(a.time));
+
+  document.getElementById('activity-feed').innerHTML = items.map(i => `
+    <div class="feed-item">
+      <span class="feed-icon">${i.icon}</span>
+      <div style="flex:1"><div style="font-size:.75rem">${i.text}</div></div>
+      <span class="feed-time">${i.time}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);text-align:center;padding:20px;font-size:.78rem">No activity</div>';
+}
+
+async function loadAll() {
+  await Promise.all([
+    checkHealth('erp',  'dot-erp'),
+    checkHealth('crm',  'dot-crm'),
+    checkHealth('wms',  'dot-wms'),
+    (async () => {
+      try {
+        const r = await fetch('/health');
+        document.getElementById('dot-gateway').className = 'status-dot ' + (r.ok ? 'up' : 'down');
+      } catch { document.getElementById('dot-gateway').className = 'status-dot down'; }
+    })(),
+  ]);
+
+  await Promise.all([loadERP(), loadCRM(), loadWMS(), loadActivity(), loadCatalogue()]);
+
+  document.getElementById('lastUpdated').textContent =
+    'Updated ' + new Date().toLocaleTimeString();
+}
+
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>

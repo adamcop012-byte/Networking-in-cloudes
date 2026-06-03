@@ -1,0 +1,13 @@
+version: 1
+
+services:
+  - type: web
+    name: cloud-erp-gateway
+    runtime: docker
+    dockerfilePath: gateway/Dockerfile
+    rootDir: cloud-erp-platform
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health
